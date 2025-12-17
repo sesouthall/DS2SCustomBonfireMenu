@@ -19,6 +19,8 @@ static decltype(&DirectInput8Create) original_dinput8_create;
 typedef signed long long undefined8;
 typedef signed int undefined4;
 
+typedef undefined8(BonfireMenuOptionFunction)(undefined8, undefined8);
+
 #pragma pack(push, 1)
 class LocalizedString
 {
@@ -76,7 +78,7 @@ class EventBonfireManager
 public:
     void* mapObjectBonfireComponentVtable;
     MapObjBonfireComponent* MapObjBonfireComponent;
-    uint64_t field_0x10;
+    BonfireMenuOptionFunction* field_0x10;
     int64_t field_0x18;
     FeOperatorTestBonfirePropertyOfProperty* field_0x20;
 };
@@ -206,69 +208,73 @@ static undefined8 CustomMenuFunction(undefined8 param_1, undefined8 param_2)
     return param_2;
 }
 
+static EventBonfireManager* ConstructEventBonfireManager(FeOperatorTestBonfirePropertyOfProperty* param_1, BonfireMenuOptionFunction* callback)
+{
+    int64_t* plVar6 = FUN_140046bd0();
+    EventBonfireManager* pEVar7 = (EventBonfireManager*)heapAllocator(0x28, 8, plVar6);
+    if (pEVar7 != (EventBonfireManager*)0x0) {
+        pEVar7->field_0x10 = (BonfireMenuOptionFunction*)(callback);
+        pEVar7->field_0x18 = 0;
+        pEVar7->field_0x20 = param_1;
+        pEVar7->mapObjectBonfireComponentVtable = (void*)(Game::ds2_base + 0x10bad98);
+        pEVar7->MapObjBonfireComponent = 0;
+        FUN_140833650(&pEVar7->MapObjBonfireComponent);
+        return pEVar7;
+    }
+
+    return 0;
+}
+
 static undefined8 Override_CreateBonfireMenu(FeOperatorTestBonfirePropertyOfProperty* param_1, undefined8 param_2, undefined4 param_3)
 {
     bool uVar2;
     int iVar3;
     GameDataManager* lVar4;
     int64_t lVar5;
-    int64_t* plVar6;
-    EventBonfireManager* pEVar7;
     DemoCharacterCtrl* pDVar8;
-    EventBonfireManager* pEVar9;
-    char* pcVar10;
-    char* pcVar11;
-    char* pcVar12;
-    char* pcVar13;
-    char* pcVar14;
-    char* pcVar15;
-    char* pcVar16;
+    char* itemBoxString;
+    char* nullifyHumanEffigysEffectString;
+    char* burnString;
+    char* attuneSpellsString;
+    char* travelString;
+    char* bonfireNameString;
+    char* customMenuOptionString;
     undefined8 uVar16;
     undefined8 uVar17;
-    int iVar18;
-    char local_a88;
-    int64_t* local_a78;
+    int nextNGPlusCount;
+    char canHumanEffigyBeNullified;
     undefined4 local_a70;
     undefined4 local_a6c;
     uint32_t local_a68;
-    uint32_t uStack_a64;
-    EventBonfireManager* local_a60;
-    FeOperatorTestBonfirePropertyOfProperty* local_a58;
-    LocalizedString local_a48;
-    EventBonfireManager* local_a40;
-    LocalizedString local_a38;
-    LocalizedString LStack_a30;
+    EventBonfireManager* itemBoxCallback;
+    LocalizedString nullifyHumanEffigysEffectLocId;
+    EventBonfireManager* nullifyHumanEffigyEffectCallback;
+    LocalizedString travelLocId;
+    LocalizedString beginJourneyNToDrangleicLocId;
     undefined8 local_a28;
-    EventBonfireManager* local_a20;
-    EventBonfireManager* local_a18;
-    EventBonfireManager* local_a10;
-    LocalizedString local_a08;
-    EventBonfireManager* local_a00;
+    EventBonfireManager* travelFunctionCallback;
+    EventBonfireManager* goToNGPlusCallback;
+    EventBonfireManager* burnCallback;
+    LocalizedString itemBoxLocId;
+    EventBonfireManager* attuneSpellsCallback;
     EventBonfireManager* CustomMenuOption;
-    LocalizedString local_9f8;
-    LocalizedString local_9f0;
-    LocalizedString local_9e8;
+    LocalizedString burnLocId;
+    LocalizedString bonfireNameLocId;
+    LocalizedString attuneSpellsLocId;
     DemoCharacterCtrl auStack_9e0;
     char local_958[16];
     DemoCharacterCtrl local_940;
 
     printf_s("Started menu creation\n");
     param_1->field_0x2f60 = param_3;
-    local_a58 = param_1;
     lVar4 = (GameDataManager*)FUN_140040420();
     if (lVar4 != (GameDataManager*)0x0) {
         FUN_1401abee0(lVar4, 0x304b480);
         FUN_1401abee0(lVar4, 0x304db90);
     }
-    pEVar9 = (EventBonfireManager*)0x0;
-    local_a78 = 0;
-    pEVar7 = (EventBonfireManager*)0x0;
-    if (gameManagerImp->EventManager != (EventManager*)0x0) {
-        pEVar7 = gameManagerImp->EventManager->EventBonfireManager;
-    }
-    iVar18 = 0;
+    nextNGPlusCount = 0;
     iVar3 = 0;
-    if (lVar5 = FUN_14017e370(pEVar7, param_3), lVar5 != 0)
+    if (lVar5 = FUN_14017e370(gameManagerImp->EventManager->EventBonfireManager, param_3), lVar5 != 0)
     {
         iVar3 = *(int*)(lVar5 + 0x1c);
     }
@@ -276,41 +282,23 @@ static undefined8 Override_CreateBonfireMenu(FeOperatorTestBonfirePropertyOfProp
     FUN_14024f090(&local_a28);
     if (FUN_14024f2a0(&local_a28, param_1->field_0x2f64) && gameManagerImp->field1124_0x22f0 &&
         FUN_140513600(param_1) && FUN_14017e830(gameManagerImp->EventManager->EventBonfireManager, param_1->field_0x2f60)) {
-        local_a88 = 1;
+        canHumanEffigyBeNullified = 1;
     }
     else
     {
-        local_a88 = 0;
+        canHumanEffigyBeNullified = 0;
     }
     local_a68 = 0;
     auStack_9e0.field_0x48 = 0;
 
     printf_s("Ready to construct 1st EventBonfireManager\n");
+    goToNGPlusCallback = ConstructEventBonfireManager(param_1, (BonfireMenuOptionFunction*)(Game::ds2_base + 0xd9a10));
 
-    plVar6 = (int64_t*)FUN_140046bd0();
-    pEVar7 = (EventBonfireManager*)heapAllocator(0x28, 8, plVar6);
-    local_a18 = (EventBonfireManager*)0x0;
-    if (pEVar7 != (EventBonfireManager*)0x0) {
-        pEVar7->field_0x10 = Game::ds2_base + 0xd9a10;
-        pEVar7->mapObjectBonfireComponentVtable = (void*)(Game::ds2_base + 0x10add70);
-        pEVar7->field_0x18 = 0;
-        pEVar7->field_0x20 = param_1;
-        *(undefined4*)&pEVar7->MapObjBonfireComponent = 0;
-        pEVar7->mapObjectBonfireComponentVtable = (void*)(Game::ds2_base + 0x10bad98);
-        local_a18 = pEVar7;
+    if (gameManagerImp->GameDataManager && gameManagerImp->GameDataManager->player_data) {
+        nextNGPlusCount = (gameManagerImp->GameDataManager->player_data->field_0x68) + 1;
     }
-    if (local_a18 != (EventBonfireManager*)0x0) {
-        FUN_140833650(&local_a18->MapObjBonfireComponent);
-    }
-    pEVar7 = (EventBonfireManager*)0x0;
-    if (gameManagerImp->GameDataManager != (GameDataManager*)0x0) {
-        pEVar7 = (EventBonfireManager*)gameManagerImp->GameDataManager->player_data;
-    }
-    if (pEVar7 != (EventBonfireManager*)0x0) {
-        iVar18 = (gameManagerImp->GameDataManager->player_data->field_0x68) + 1;
-    }
-    FUN_14003d870(&LStack_a30, 0xb, 0x277d);
-    pDVar8 = FUN_14003d880(&LStack_a30, &local_940, iVar18);
+    FUN_14003d870(&beginJourneyNToDrangleicLocId, 0xb, 0x277d); //Begin journey %d to Drangleic
+    pDVar8 = FUN_14003d880(&beginJourneyNToDrangleicLocId, &local_940, nextNGPlusCount);
     auStack_9e0.field_0x20 = pDVar8->field_0x20;
     auStack_9e0.field_0x18 = 7;
     auStack_9e0.field_0x10 = 0;
@@ -321,151 +309,63 @@ static undefined8 Override_CreateBonfireMenu(FeOperatorTestBonfirePropertyOfProp
     auStack_9e0.field_0x30 = 0x5f5c5b200000067;
 
     printf_s("Ready to construct 2nd EventBonfireManager\n");
-
-    plVar6 = FUN_140046bd0();
-    pEVar7 = (EventBonfireManager*)heapAllocator(0x28, 8, plVar6);
-    local_a60 = (EventBonfireManager*)0x0;
-    if (pEVar7 != (EventBonfireManager*)0x0) {
-        pEVar7->mapObjectBonfireComponentVtable = (void*)(Game::ds2_base + 0x10add70);
-        *(undefined4*)&pEVar7->MapObjBonfireComponent = 0;
-        pEVar7->field_0x10 = Game::ds2_base + 0xd90b0;
-        *(undefined8*)&pEVar7->field_0x18 = 0;
-        pEVar7->field_0x20 = param_1;
-        pEVar7->mapObjectBonfireComponentVtable = (void*)(Game::ds2_base + 0x10bad98);
-        local_a60 = pEVar7;
-    }
-    if (local_a60 != (EventBonfireManager*)0x0) {
-        FUN_140833650(&local_a60->MapObjBonfireComponent);
-    }
+    itemBoxCallback = ConstructEventBonfireManager(param_1, (BonfireMenuOptionFunction*)(Game::ds2_base + 0xd90b0));
 
     printf_s("Ready to construct 3rd EventBonfireManager\n");
+    nullifyHumanEffigyEffectCallback = ConstructEventBonfireManager(param_1, (BonfireMenuOptionFunction*)(Game::ds2_base + 0xd93b0));
 
-    FUN_14003d870(&local_a08, 0xb, 0x2777);
-    plVar6 = (int64_t*)FUN_140046bd0();
-    pEVar7 = (EventBonfireManager*)heapAllocator(0x28, 8, plVar6);
-    local_a40 = (EventBonfireManager*)0x0;
-    if (pEVar7 != (EventBonfireManager*)0x0) {
-        pEVar7->mapObjectBonfireComponentVtable = (void*)(Game::ds2_base + 0x10add70);
-        *(undefined4*)&pEVar7->MapObjBonfireComponent = 0;
-        pEVar7->field_0x10 = Game::ds2_base + 0xd93b0;
-        *(uint64_t*)&pEVar7->field_0x18 = 0;
-        pEVar7->field_0x20 = param_1;
-        pEVar7->mapObjectBonfireComponentVtable = (void*)(Game::ds2_base + 0x10bad98);
-        local_a40 = pEVar7;
-    }
-    if (local_a40 != (EventBonfireManager*)0x0) {
-        FUN_140833650(&local_a40->MapObjBonfireComponent);
-    }
 
     printf_s("Ready to construct 4th EventBonfireManager\n");
+    burnCallback = ConstructEventBonfireManager(param_1, (BonfireMenuOptionFunction*)(Game::ds2_base + 0xd8870));
 
-    FUN_14003d870(&local_a48, 0xb, 0x277e);
-    plVar6 = (int64_t*)FUN_140046bd0();
-    pEVar7 = (EventBonfireManager*)heapAllocator(0x28, 8, plVar6);
-    local_a10 = (EventBonfireManager*)0x0;
-    if (pEVar7 != (EventBonfireManager*)0x0) {
-        pEVar7->mapObjectBonfireComponentVtable = (void*)(Game::ds2_base + 0x10add70);
-        *(undefined4*)&pEVar7->MapObjBonfireComponent = 0;
-        pEVar7->field_0x10 = Game::ds2_base + 0xd8870;
-        *(uint64_t*)&pEVar7->field_0x18 = 0;
-        pEVar7->field_0x20 = param_1;
-        pEVar7->mapObjectBonfireComponentVtable = (void*)(Game::ds2_base + 0x10bad98);
-        local_a10 = pEVar7;
-    }
-    if (local_a10 != (EventBonfireManager*)0x0) {
-        FUN_140833650(&local_a10->MapObjBonfireComponent);
-    }
 
     printf_s("Ready to construct 5th EventBonfireManager\n");
+    attuneSpellsCallback = ConstructEventBonfireManager(param_1, (BonfireMenuOptionFunction*)(Game::ds2_base + 0xd9c90));
 
-    FUN_14003d870(&local_9f8, 0xb, 0x2778);
-    plVar6 = (int64_t*)FUN_140046bd0();
-    pEVar7 = (EventBonfireManager*)heapAllocator(0x28, 8, plVar6);
-    local_a00 = (EventBonfireManager*)0x0;
-    if (pEVar7 != (EventBonfireManager*)0x0) {
-        pEVar7->mapObjectBonfireComponentVtable = (void*)(Game::ds2_base + 0x10add70);
-        *(undefined4*)&pEVar7->MapObjBonfireComponent = 0;
-        pEVar7->field_0x10 = Game::ds2_base + 0xd9c90;
-        *(undefined8*)&pEVar7->field_0x18 = 0;
-        pEVar7->field_0x20 = param_1;
-        pEVar7->mapObjectBonfireComponentVtable = (void*)(Game::ds2_base + 0x10bad98);
-        local_a00 = pEVar7;
-    }
-    if (local_a00 != (EventBonfireManager*)0x0) {
-        FUN_140833650(&local_a00->MapObjBonfireComponent);
-    }
 
     printf_s("Ready to construct 6th EventBonfireManager\n");
+    travelFunctionCallback = ConstructEventBonfireManager(param_1, (BonfireMenuOptionFunction*)(Game::ds2_base + 0xd9dd0));
 
-    FUN_14003d870(&local_9e8, 0xb, 0x2775);
-    plVar6 = (int64_t*)FUN_140046bd0();
-    pEVar7 = (EventBonfireManager*)heapAllocator(0x28, 8, plVar6);
-    if (pEVar7 != (EventBonfireManager*)0x0) {
-        pEVar7->mapObjectBonfireComponentVtable = (void*)(Game::ds2_base + 0x10add70);
-        *(undefined4*)&pEVar7->MapObjBonfireComponent = 0;
-        pEVar7->field_0x10 = Game::ds2_base + 0xd9dd0;
-        *(uint64_t*)&pEVar7->field_0x18 = 0;
-        pEVar7->field_0x20 = param_1;
-        pEVar7->mapObjectBonfireComponentVtable = (void*)(Game::ds2_base + 0x10bad98);
-        pEVar9 = pEVar7;
-    }
-    local_a20 = pEVar9;
-    if (pEVar9 != (EventBonfireManager*)0x0) {
-        FUN_140833650(&pEVar9->MapObjBonfireComponent);
-    }
+    
 
     printf_s("Ready to construct 7th EventBonfireManager\n");
-
-    plVar6 = (int64_t*)FUN_140046bd0();
-    pEVar7 = (EventBonfireManager*)heapAllocator(0x28, 8, plVar6);
-    if (pEVar7 != (EventBonfireManager*)0x0) {
-        pEVar7->mapObjectBonfireComponentVtable = (void*)(Game::ds2_base + 0x10add70);
-        *(undefined4*)&pEVar7->MapObjBonfireComponent = 0;
-        pEVar7->field_0x10 = (uint64_t)CustomMenuFunction;
-        *(uint64_t*)&pEVar7->field_0x18 = 0;
-        pEVar7->field_0x20 = param_1;
-        pEVar7->mapObjectBonfireComponentVtable = (void*)(Game::ds2_base + 0x10bad98);
-        pEVar9 = pEVar7;
-    }
-    CustomMenuOption = pEVar9;
-    if (pEVar9 != (EventBonfireManager*)0x0) {
-        FUN_140833650(&pEVar9->MapObjBonfireComponent);
-    }
+    CustomMenuOption = ConstructEventBonfireManager(param_1, CustomMenuFunction);
 
     printf_s("Ready to write bonfire menu options\n");
 
-    FUN_14003d870(&local_a38, 0xb, 0x2776);
-    FUN_14003d870(&local_9f0, 0x12, param_3);
+    FUN_14003d870(&attuneSpellsLocId, 0xb, 0x2775); //Attune spells
+    FUN_14003d870(&travelLocId, 0xb, 0x2776); //Travel
+    FUN_14003d870(&itemBoxLocId, 0xb, 0x2777); //Item box
+    FUN_14003d870(&burnLocId, 0xb, 0x2778); //Burn
+    FUN_14003d870(&nullifyHumanEffigysEffectLocId, 0xb, 0x277e); //Nullify Human Effigy's effect
+    FUN_14003d870(&bonfireNameLocId, 0x12, param_3); // Bonfire name (e.g. The Far Fire)
     local_a70 = 0;
     local_a6c = 0x14;
     local_a68 = local_a68 & 0xffffff00;
-    if (param_1->field_0x108 != 0) {
-        local_a78 = &param_1->field_0x108->field_0x30;
-    }
     uVar2 = FUN_1400d81e0(param_1);
-    printf_s("Getting localized strings");
-    pcVar10 = FUN_140503620(local_a08.LocTable, local_a08.StringId);
-    pcVar11 = FUN_140503620(local_a48.LocTable, local_a48.StringId);
-    pcVar12 = FUN_140503620(local_9f8.LocTable, local_9f8.StringId);
-    pcVar13 = FUN_140503620(local_9e8.LocTable, local_9e8.StringId);
-    pcVar14 = FUN_140503620(local_a38.LocTable, local_a38.StringId);
-    pcVar15 = FUN_140503620(local_9f0.LocTable, local_9f0.StringId);
-    pcVar16 = FUN_140503620(0xb, 0x277F);
-    uVar16 = FUN_14002aad0(&local_940.field_0x38, local_a78, &local_a70);
-    printf_s("Writing into menu object");
-    uVar16 = FUN_14002c580(uVar16, pcVar15);
+    printf_s("Getting localized strings\n");
+    itemBoxString = FUN_140503620(itemBoxLocId.LocTable, itemBoxLocId.StringId);
+    nullifyHumanEffigysEffectString = FUN_140503620(nullifyHumanEffigysEffectLocId.LocTable, nullifyHumanEffigysEffectLocId.StringId);
+    burnString = FUN_140503620(burnLocId.LocTable, burnLocId.StringId);
+    attuneSpellsString = FUN_140503620(attuneSpellsLocId.LocTable, attuneSpellsLocId.StringId);
+    travelString = FUN_140503620(travelLocId.LocTable, travelLocId.StringId);
+    bonfireNameString = FUN_140503620(bonfireNameLocId.LocTable, bonfireNameLocId.StringId);
+    customMenuOptionString = FUN_140503620(0xb, 0x277F);
+    uVar16 = FUN_14002aad0(&local_940.field_0x38, &param_1->field_0x108->field_0x30, &local_a70);
+    printf_s("Writing into menu object\n");
+    uVar16 = FUN_14002c580(uVar16, bonfireNameString);
     uVar16 = FUN_14002b170(uVar16);
-    uVar16 = FUN_14002b240(uVar16, pcVar14, &local_a20);
-    uVar16 = FUN_14002b240(uVar16, pcVar13, &local_a00);
-    uVar16 = FUN_14002b240(uVar16, pcVar12, &local_a10);
-    uVar16 = FUN_14002b240(uVar16, pcVar16, &CustomMenuOption);
-    uVar16 = FUN_14002b240(uVar16, pcVar11, &local_a40);
-    uVar16 = FUN_14002c680(uVar16, local_a88);
-    uVar16 = FUN_14002b240(uVar16, pcVar10, &local_a60);
-    uVar16 = FUN_14002b3e0(uVar16, &auStack_9e0, &local_a18);
-    uVar16 = FUN_14002c680(uVar16, uVar2);
+    uVar16 = FUN_14002b240(uVar16, travelString, &travelFunctionCallback);
+    uVar16 = FUN_14002b240(uVar16, attuneSpellsString, &attuneSpellsCallback);
+    uVar16 = FUN_14002b240(uVar16, burnString, &burnCallback);
+    uVar16 = FUN_14002b240(uVar16, customMenuOptionString, &CustomMenuOption);
+    uVar16 = FUN_14002b240(uVar16, nullifyHumanEffigysEffectString, &nullifyHumanEffigyEffectCallback);
+    uVar16 = FUN_14002c680(uVar16, canHumanEffigyBeNullified); // Hide previous menu option if false?
+    uVar16 = FUN_14002b240(uVar16, itemBoxString, &itemBoxCallback);
+    uVar16 = FUN_14002b3e0(uVar16, &auStack_9e0, &goToNGPlusCallback); //go to NG+ menu option?
+    uVar16 = FUN_14002c680(uVar16, uVar2); // Hide previous menu option if the game isn't complete?
     uVar16 = FUN_14002b670(uVar16, &auStack_9e0.field_0x50);
-    printf_s("Finizing stuff?");
+    printf_s("Finishing stuff?\n");
     uVar17 = FUN_1400268c0(&param_1->field_0x2c0, local_958);
     FUN_140028bb0(param_2, uVar17, uVar16);
     FUN_14002aed0(&local_940.field_0x48);
