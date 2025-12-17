@@ -1,3 +1,3 @@
-# dinput8_wrapper
+# DS2SCustomBonfireMenu
  
-Credits to LukeYui for providing sample code
+Credits to LukeYui and LordRadai for providing sample code
